@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TV Remote</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    button { font-size: 20px; margin: 10px; padding: 10px 20px; }
+    #trackpad {
+      width: 300px;
+      height: 300px;
+      margin: 30px auto;
+      background-color: #ddd;
+      border: 2px solid #888;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>My TV Remote</h1>
+
+  <button onclick="sendCommand('KEY_UP')">↑</button><br>
+  <button onclick="sendCommand('KEY_LEFT')">←</button>
+  <button onclick="sendCommand('KEY_OK')">OK</button>
+  <button onclick="sendCommand('KEY_RIGHT')">→</button><br>
+  <button onclick="sendCommand('KEY_DOWN')">↓</button><br>
+  <button onclick="sendCommand('KEY_RETURN')">Back</button>
+
+  <div id="trackpad"></div>
+
+  <script>
+    const tvIP = '192.168.1.6'; // Replace this with your TV's local IP
+
+    function sendCommand(key) {
+      fetch(`http://${tvIP}:8001/api/v2/channels/samsung.remote.control`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          method: "ms.remote.control",
+          params: {
+            Cmd: "Click",
+            DataOfCmd: key,
+            Option: "false",
+            TypeOfRemote: "SendRemoteKey"
+          }
+        })
+      });
+    }
+
+    // Trackpad gestures
+    const trackpad = document.getElementById('trackpad');
+    let startX, startY;
+
+    trackpad.addEventListener('touchstart', e => {
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+    });
+
+    trackpad.addEventListener('touchend', e => {
+      const t = e.changedTouches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        sendCommand(dx > 0 ? 'KEY_RIGHT' : 'KEY_LEFT');
+      } else {
+        sendCommand(dy > 0 ? 'KEY_DOWN' : 'KEY_UP');
+      }
+    });
+  </script>
+</body>
+</html>
